@@ -1,0 +1,9 @@
+FROM node:20-alpine
+WORKDIR /app
+RUN apk add --no-cache libc6-compat
+COPY package.json package-lock.json* ./
+RUN npm ci
+COPY prisma ./prisma
+COPY prisma/seed.ts ./prisma/seed.ts
+RUN npx prisma generate
+CMD ["sh", "-c", "npx prisma db push && npx tsx prisma/seed.ts"]

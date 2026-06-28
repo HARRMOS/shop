@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  FEMME
+  HOMME
+  UNISEXE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  gender      Gender?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  price       Float
+  compareAt   Float?
+  image       String
+  images      String[]
+  sizes       String[]
+  colors      String[]
+  gender      Gender
+  featured    Boolean  @default(false)
+  inStock     Boolean  @default(true)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  orderNumber String     @unique
+  status     OrderStatus @default(PENDING)
+  email      String
+  firstName  String
+  lastName   String
+  phone      String
+  address    String
+  city       String
+  postalCode String
+  country    String      @default("France")
+  items      Json
+  subtotal   Float
+  shipping   Float       @default(0)
+  total      Float
+  notes      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
