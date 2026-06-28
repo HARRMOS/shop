@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "@/lib/utils";
+import { isDemoMode } from "@/lib/demo";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +19,10 @@ export async function POST(request: NextRequest) {
     }
 
     const orderNumber = generateOrderNumber();
+
+    if (isDemoMode()) {
+      return NextResponse.json({ orderNumber, id: "demo", demo: true });
+    }
 
     const order = await prisma.order.create({
       data: {
