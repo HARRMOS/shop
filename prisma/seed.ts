@@ -195,7 +195,7 @@ async function main() {
     const category = await prisma.category.findUnique({ where: { slug: categorySlug } });
     if (!category) continue;
 
-    await prisma.product.upsert({
+    const saved = await prisma.product.upsert({
       where: { slug: data.slug },
       update: {
         name: data.name,
@@ -207,9 +207,31 @@ async function main() {
         colors: data.colors,
         featured: data.featured,
         gender: data.gender,
+        inStock: true,
       },
       create: { ...data, categoryId: category.id },
     });
+
+    for (const size of saved.sizes) {
+      for (const color of saved.colors) {
+        await prisma.productVariant.upsert({
+          where: {
+            productId_size_color: {
+              productId: saved.id,
+              size,
+              color,
+            },
+          },
+          update: {},
+          create: {
+            productId: saved.id,
+            size,
+            color,
+            stock: 10,
+          },
+        });
+      }
+    }
   }
 
   console.log("✅ Seed completed!");

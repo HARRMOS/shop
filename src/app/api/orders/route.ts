@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "@/lib/utils";
 import { isDemoMode } from "@/lib/demo";
-import { validateOrderItems } from "@/lib/orders";
+import { validateOrderItems, decrementOrderStock } from "@/lib/orders";
 import { sendOrderConfirmationToCustomer, sendOrderNotificationToShop } from "@/lib/email";
 import type { CartItem } from "@/lib/cart-types";
 import type { Prisma } from "@prisma/client";
@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
     });
 
     console.info(`Order created: ${order.orderNumber} (${order.id})`);
+
+    await decrementOrderStock(items as CartItem[]);
 
     const emailData = {
       orderNumber: order.orderNumber,
