@@ -1,24 +1,28 @@
 #!/bin/sh
 # Crée la base dans un conteneur PostgreSQL Docker existant
-# Configure POSTGRES_CONTAINER dans .env (nom du conteneur, ex: noor-postgres)
 set -e
 
-# Charge .env si présent
+# Charge uniquement les variables Postgres du .env (évite les erreurs avec les espaces)
 if [ -f .env ]; then
-  set -a
-  . ./.env
-  set +a
+  for key in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB POSTGRES_CONTAINER POSTGRES_ADMIN_USER POSTGRES_ADMIN_DB; do
+    line=$(grep -E "^${key}=" .env | head -1 || true)
+    if [ -n "$line" ]; then
+      value=$(printf '%s' "$line" | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+      export "$key=$value"
+    fi
+  done
 fi
 
 POSTGRES_USER="${POSTGRES_USER:-noor}"
 POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-noor_secret}"
-POSTGRES_DB="${POSTGRES_DB:-noor_collection}"
+POSTGRES_DB="${POSTGRES_DB:-noor_shop}"
 POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-noor-postgres}"
-POSTGRES_ADMIN_USER="${POSTGRES_ADMIN_USER:-postgres}"
+POSTGRES_ADMIN_USER="${POSTGRES_ADMIN_USER:-admin}"
+POSTGRES_ADMIN_DB="${POSTGRES_ADMIN_DB:-haros}"
 
 echo "→ Création utilisateur et base dans le conteneur '$POSTGRES_CONTAINER'..."
 
-docker exec -i "$POSTGRES_CONTAINER" psql -U "$POSTGRES_ADMIN_USER" <<EOF
+docker exec -i "$POSTGRES_CONTAINER" psql -U "$POSTGRES_ADMIN_USER" -d "$POSTGRES_ADMIN_DB" <<EOF
 DO \$\$
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$POSTGRES_USER') THEN
