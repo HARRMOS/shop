@@ -53,6 +53,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.info(`Order created: ${order.orderNumber} (${order.id})`);
+
     const emailData = {
       orderNumber: order.orderNumber,
       firstName: order.firstName,

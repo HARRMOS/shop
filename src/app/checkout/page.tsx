@@ -18,6 +18,7 @@ export default function CheckoutPage() {
   const [success, setSuccess] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const [orderEmail, setOrderEmail] = useState("");
+  const [isDemoOrder, setIsDemoOrder] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -64,15 +65,18 @@ export default function CheckoutPage() {
         body: JSON.stringify(data),
       });
 
-      if (!res.ok) throw new Error("Erreur lors de la commande");
-
       const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.error || "Erreur lors de la commande");
+      }
+
       setOrderNumber(result.orderNumber);
       setOrderEmail(data.email);
+      setIsDemoOrder(Boolean(result.demo));
       clearCart();
       setSuccess(true);
-    } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -87,9 +91,17 @@ export default function CheckoutPage() {
           <p className="text-charcoal-light mb-2">
             Merci pour votre commande. Vous recevrez un email de confirmation sous peu.
           </p>
-          <p className="text-sm font-medium text-charcoal mb-8">
+          <p className="text-sm font-medium text-charcoal mb-4">
             N° de commande : {orderNumber}
           </p>
+          {isDemoOrder && (
+            <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 px-4 py-3 mb-8">
+              Mode démo actif : cette commande n&apos;a pas été enregistrée en base. Mettez{" "}
+              <code className="text-xs">DEMO_MODE=false</code> dans le fichier <code className="text-xs">.env</code>{" "}
+              puis redémarrez l&apos;application.
+            </p>
+          )}
+          {!isDemoOrder && <div className="mb-8" />}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href={`/commande/suivi?numero=${orderNumber}&email=${encodeURIComponent(orderEmail)}`}

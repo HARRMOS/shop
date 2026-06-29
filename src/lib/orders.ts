@@ -19,6 +19,12 @@ export async function validateOrderItems(items: CartItem[]) {
   const validated: CartItem[] = [];
 
   for (const item of items) {
+    if (item.productId.startsWith("demo-")) {
+      throw new Error(
+        "Panier obsolète (mode démo). Videz le panier, rechargez la page, puis rajoutez vos articles."
+      );
+    }
+
     const product = await prisma.product.findUnique({ where: { id: item.productId } });
     if (!product || !product.inStock) {
       throw new Error(`Produit indisponible : ${item.name}`);
