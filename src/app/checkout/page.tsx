@@ -20,6 +20,7 @@ export default function CheckoutPage() {
   const [orderEmail, setOrderEmail] = useState("");
   const [isDemoOrder, setIsDemoOrder] = useState(false);
   const [error, setError] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -38,6 +39,10 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!acceptedTerms) {
+      setError("Veuillez accepter les conditions générales de vente.");
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -299,9 +304,29 @@ export default function CheckoutPage() {
 
               {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
+              <label className="mt-4 flex items-start gap-3 text-xs text-charcoal-light leading-relaxed cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 shrink-0"
+                />
+                <span>
+                  J&apos;accepte les{" "}
+                  <Link href="/cgv" target="_blank" className="text-sage hover:underline">
+                    conditions générales de vente
+                  </Link>{" "}
+                  et la{" "}
+                  <Link href="/confidentialite" target="_blank" className="text-sage hover:underline">
+                    politique de confidentialité
+                  </Link>
+                  .
+                </span>
+              </label>
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !acceptedTerms}
                 className="mt-6 w-full bg-charcoal text-warm-white py-4 text-sm uppercase tracking-widest hover:bg-charcoal-light transition-colors disabled:opacity-50"
               >
                 {loading ? "Traitement..." : "Confirmer la commande"}

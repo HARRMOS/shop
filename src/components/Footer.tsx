@@ -93,7 +93,13 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-charcoal-light flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-cream-dark">
           <p>&copy; {new Date().getFullYear()} Noor Collection. Tous droits réservés.</p>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center sm:justify-end">
+            <Link href="/cgv" className="hover:text-warm-white transition-colors">
+              CGV
+            </Link>
+            <Link href="/cgu" className="hover:text-warm-white transition-colors">
+              CGU
+            </Link>
             <Link href="/mentions-legales" className="hover:text-warm-white transition-colors">
               Mentions légales
             </Link>
