@@ -1,0 +1,53 @@
+# Déploiement sur ton VPS OVH (Traefik + PostgreSQL existant)
+#
+# 1. Créer la BDD : ./scripts/create-db.sh
+# 2. Configurer .env : cp .env.ovh.example .env && nano .env
+# 3. Lancer : docker compose -f docker-compose.ovh.yml up -d --build
+# 4. Seed : docker compose -f docker-compose.ovh.yml --profile seed run --rm seed
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: noor-shop
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-noor}:${POSTGRES_PASSWORD}@${POSTGRES_CONTAINER:-noor-postgres}:5432/${POSTGRES_DB:-noor_collection}?schema=public
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME:-Noor Collection}
+      AUTH_SECRET: ${AUTH_SECRET}
+      DEMO_MODE: ${DEMO_MODE:-false}
+    networks:
+      - traefik
+      - postgres
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.noor-shop.rule=Host(`${SHOP_DOMAIN}`)
+      - traefik.http.routers.noor-shop.entrypoints=websecure
+      - traefik.http.routers.noor-shop.tls=true
+      - traefik.http.routers.noor-shop.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      - traefik.http.services.noor-shop.loadbalancer.server.port=3000
+      - traefik.http.routers.noor-shop-http.rule=Host(`${SHOP_DOMAIN}`)
+      - traefik.http.routers.noor-shop-http.entrypoints=web
+      - traefik.http.routers.noor-shop-http.middlewares=noor-shop-redirect
+      - traefik.http.middlewares.noor-shop-redirect.redirectscheme.scheme=https
+
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile.seed
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-noor}:${POSTGRES_PASSWORD}@${POSTGRES_CONTAINER:-noor-postgres}:5432/${POSTGRES_DB:-noor_collection}?schema=public
+    networks:
+      - postgres
+    profiles:
+      - seed
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}
+  postgres:
+    external: true
+    name: ${POSTGRES_NETWORK:-postgres}
