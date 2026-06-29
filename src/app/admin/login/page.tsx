@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,12 +15,16 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ password }),
       });
-      if (!res.ok) throw new Error();
-      router.push("/admin");
-    } catch {
-      setError("Mot de passe incorrect");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Erreur");
+      }
+      window.location.href = "/admin";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Mot de passe incorrect");
     } finally {
       setLoading(false);
     }

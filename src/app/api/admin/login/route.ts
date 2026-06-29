@@ -5,7 +5,10 @@ export async function POST(request: NextRequest) {
   const { password } = await request.json();
 
   if (!verifyAdminPassword(password)) {
-    return NextResponse.json({ error: "Mot de passe incorrect" }, { status: 401 });
+    const message = !process.env.ADMIN_PASSWORD?.trim()
+      ? "ADMIN_PASSWORD non configuré sur le serveur"
+      : "Mot de passe incorrect";
+    return NextResponse.json({ error: message }, { status: 401 });
   }
 
   const response = NextResponse.json({ ok: true });

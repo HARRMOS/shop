@@ -8,12 +8,17 @@ export function useAdminAuth() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/stats")
+    fetch("/api/admin/session", { credentials: "include" })
       .then((r) => {
-        if (!r.ok) throw new Error();
+        if (r.status === 401) throw new Error("unauthorized");
+        if (!r.ok) throw new Error("server");
         setReady(true);
       })
-      .catch(() => router.push("/admin/login"));
+      .catch((err) => {
+        if (err instanceof Error && err.message === "unauthorized") {
+          router.push("/admin/login");
+        }
+      });
   }, [router]);
 
   return ready;

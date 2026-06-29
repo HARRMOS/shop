@@ -18,24 +18,32 @@ export async function GET() {
     });
   }
 
-  const [orders, revenue, pendingOrders, products, lowStock, unreadMessages, pendingRefunds] =
-    await Promise.all([
-      prisma.order.count(),
-      prisma.order.aggregate({ _sum: { total: true } }),
-      prisma.order.count({ where: { status: "PENDING" } }),
-      prisma.product.count(),
-      prisma.productVariant.count({ where: { stock: { lte: 3 } } }),
-      prisma.contactMessage.count({ where: { read: false } }),
-      prisma.refundRequest.count({ where: { status: "PENDING" } }),
-    ]);
+  try {
+    const [orders, revenue, pendingOrders, products, lowStock, unreadMessages, pendingRefunds] =
+      await Promise.all([
+        prisma.order.count(),
+        prisma.order.aggregate({ _sum: { total: true } }),
+        prisma.order.count({ where: { status: "PENDING" } }),
+        prisma.product.count(),
+        prisma.productVariant.count({ where: { stock: { lte: 3 } } }),
+        prisma.contactMessage.count({ where: { read: false } }),
+        prisma.refundRequest.count({ where: { status: "PENDING" } }),
+      ]);
 
-  return NextResponse.json({
-    orders,
-    revenue: revenue._sum.total ?? 0,
-    pendingOrders,
-    products,
-    lowStock,
-    unreadMessages,
-    pendingRefunds,
-  });
+    return NextResponse.json({
+      orders,
+      revenue: revenue._sum.total ?? 0,
+      pendingOrders,
+      products,
+      lowStock,
+      unreadMessages,
+      pendingRefunds,
+    });
+  } catch (error) {
+    console.error("Admin stats error:", error);
+    return NextResponse.json(
+      { error: "Schéma BDD incomplet — lancez prisma db push" },
+      { status: 500 }
+    );
+  }
 }
