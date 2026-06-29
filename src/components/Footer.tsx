@@ -10,6 +10,7 @@ const footerLinks = {
   infos: [
     { href: "/a-propos", label: "À propos" },
     { href: "/livraison", label: "Livraison & retours" },
+    { href: "/commande/suivi", label: "Suivi commande" },
     { href: "/contact", label: "Contact" },
   ],
 };

@@ -1,6 +1,6 @@
-export const metadata = {
-  title: "Contact",
-};
+import { ContactForm } from "@/components/ContactForm";
+
+export const metadata = { title: "Contact" };
 
 export default function ContactPage() {
   return (
@@ -23,29 +23,7 @@ export default function ContactPage() {
               <strong className="text-charcoal">Horaires :</strong> Lun–Ven, 9h–18h
             </p>
           </div>
-          <form className="space-y-4">
-            <input
-              type="text"
-              placeholder="Nom"
-              className="w-full px-4 py-3 border border-cream-dark bg-warm-white focus:outline-none focus:border-sage text-sm"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full px-4 py-3 border border-cream-dark bg-warm-white focus:outline-none focus:border-sage text-sm"
-            />
-            <textarea
-              rows={4}
-              placeholder="Votre message"
-              className="w-full px-4 py-3 border border-cream-dark bg-warm-white focus:outline-none focus:border-sage text-sm resize-none"
-            />
-            <button
-              type="submit"
-              className="w-full bg-charcoal text-warm-white py-3 text-sm uppercase tracking-widest hover:bg-charcoal-light transition-colors"
-            >
-              Envoyer
-            </button>
-          </form>
+          <ContactForm />
         </div>
       </div>
     </div>

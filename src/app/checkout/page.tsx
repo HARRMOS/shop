@@ -17,6 +17,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [orderEmail, setOrderEmail] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -67,6 +68,7 @@ export default function CheckoutPage() {
 
       const result = await res.json();
       setOrderNumber(result.orderNumber);
+      setOrderEmail(data.email);
       clearCart();
       setSuccess(true);
     } catch {
@@ -88,12 +90,20 @@ export default function CheckoutPage() {
           <p className="text-sm font-medium text-charcoal mb-8">
             N° de commande : {orderNumber}
           </p>
-          <Link
-            href="/boutique"
-            className="inline-flex items-center gap-2 bg-charcoal text-warm-white px-8 py-4 text-sm uppercase tracking-widest hover:bg-charcoal-light transition-colors"
-          >
-            Continuer mes achats
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href={`/commande/suivi?numero=${orderNumber}&email=${encodeURIComponent(orderEmail)}`}
+              className="inline-flex items-center justify-center gap-2 border border-charcoal text-charcoal px-8 py-4 text-sm uppercase tracking-widest hover:bg-cream transition-colors"
+            >
+              Suivre ma commande
+            </Link>
+            <Link
+              href="/boutique"
+              className="inline-flex items-center justify-center gap-2 bg-charcoal text-warm-white px-8 py-4 text-sm uppercase tracking-widest hover:bg-charcoal-light transition-colors"
+            >
+              Continuer mes achats
+            </Link>
+          </div>
         </div>
       </div>
     );

@@ -53,22 +53,32 @@ model Product {
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  orderNumber String     @unique
-  status     OrderStatus @default(PENDING)
-  email      String
-  firstName  String
-  lastName   String
-  phone      String
-  address    String
-  city       String
-  postalCode String
-  country    String      @default("France")
-  items      Json
-  subtotal   Float
-  shipping   Float       @default(0)
-  total      Float
-  notes      String?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id          String      @id @default(cuid())
+  orderNumber String      @unique
+  status      OrderStatus @default(PENDING)
+  email       String
+  firstName   String
+  lastName    String
+  phone       String
+  address     String
+  city        String
+  postalCode  String
+  country     String      @default("France")
+  items       Json
+  subtotal    Float
+  shipping    Float       @default(0)
+  total       Float
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
