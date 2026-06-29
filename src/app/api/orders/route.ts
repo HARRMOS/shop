@@ -53,6 +53,30 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    const normalizedEmail = body.email.trim().toLowerCase();
+    await prisma.customerProfile.upsert({
+      where: { email: normalizedEmail },
+      create: {
+        email: normalizedEmail,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        phone: body.phone,
+        address: body.address,
+        city: body.city,
+        postalCode: body.postalCode,
+        country: body.country || "France",
+      },
+      update: {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        phone: body.phone,
+        address: body.address,
+        city: body.city,
+        postalCode: body.postalCode,
+        country: body.country || "France",
+      },
+    });
+
     console.info(`Order created: ${order.orderNumber} (${order.id})`);
 
     const emailData = {
@@ -72,10 +96,18 @@ export async function POST(request: NextRequest) {
       notes: order.notes,
     };
 
-    await Promise.allSettled([
+    const emailResults = await Promise.allSettled([
       sendOrderConfirmationToCustomer(emailData),
       sendOrderNotificationToShop(emailData),
     ]);
+
+    for (const result of emailResults) {
+      if (result.status === "rejected") {
+        console.error("Order email failed:", result.reason);
+      } else if (!result.value.ok) {
+        console.warn("Order email issue:", result.value);
+      }
+    }
 
     return NextResponse.json({ orderNumber: order.orderNumber, id: order.id });
   } catch (error) {

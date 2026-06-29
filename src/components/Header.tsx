@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { ShoppingBag, Menu, X, Search } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, User } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +57,13 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-4">
+            <Link
+              href="/compte"
+              className="p-2 text-charcoal-light hover:text-sage transition-colors"
+              aria-label="Mon compte"
+            >
+              <User size={20} />
+            </Link>
             <Link
               href="/boutique"
               className="p-2 text-charcoal-light hover:text-sage transition-colors"

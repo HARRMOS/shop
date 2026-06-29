@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/orders";
-import { LogOut, Package, Mail } from "lucide-react";
+import { LogOut, Package, Mail, RotateCcw } from "lucide-react";
 
 interface Order {
   id: string;
@@ -27,21 +27,33 @@ interface Message {
   createdAt: string;
 }
 
+interface Refund {
+  id: string;
+  status: string;
+  reason: string;
+  email: string;
+  createdAt: string;
+  order: { orderNumber: string; firstName: string; lastName: string; total: number };
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [tab, setTab] = useState<"orders" | "messages">("orders");
+  const [refunds, setRefunds] = useState<Refund[]>([]);
+  const [tab, setTab] = useState<"orders" | "messages" | "refunds">("orders");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/admin/orders").then((r) => (r.ok ? r.json() : Promise.reject())),
       fetch("/api/admin/messages").then((r) => (r.ok ? r.json() : Promise.reject())),
+      fetch("/api/admin/refunds").then((r) => (r.ok ? r.json() : [])),
     ])
-      .then(([o, m]) => {
+      .then(([o, m, r]) => {
         setOrders(o);
         setMessages(m);
+        setRefunds(r);
       })
       .catch(() => router.push("/admin/login"))
       .finally(() => setLoading(false));
@@ -56,6 +68,18 @@ export default function AdminDashboard() {
     if (res.ok) {
       const updated = await res.json();
       setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: updated.status } : o)));
+    }
+  };
+
+  const updateRefundStatus = async (id: string, status: string) => {
+    const res = await fetch(`/api/admin/refunds/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setRefunds((prev) => prev.map((r) => (r.id === id ? { ...r, status: updated.status } : r)));
     }
   };
 
@@ -97,6 +121,14 @@ export default function AdminDashboard() {
             }`}
           >
             <Mail size={16} /> Messages ({messages.length})
+          </button>
+          <button
+            onClick={() => setTab("refunds")}
+            className={`flex items-center gap-2 pb-3 text-sm uppercase tracking-widest border-b-2 -mb-px ${
+              tab === "refunds" ? "border-sage text-sage" : "border-transparent text-charcoal-light"
+            }`}
+          >
+            <RotateCcw size={16} /> Remboursements ({refunds.length})
           </button>
         </div>
 
@@ -164,6 +196,39 @@ export default function AdminDashboard() {
                   </div>
                   {msg.subject && <p className="text-sm font-medium mb-1">{msg.subject}</p>}
                   <p className="text-sm text-charcoal-light">{msg.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {tab === "refunds" && (
+          <div className="space-y-4">
+            {refunds.length === 0 ? (
+              <p className="text-charcoal-light text-center py-12">Aucune demande de remboursement</p>
+            ) : (
+              refunds.map((refund) => (
+                <div key={refund.id} className="bg-warm-white border border-cream-dark p-5">
+                  <div className="flex flex-wrap justify-between gap-4 mb-2">
+                    <div>
+                      <p className="font-medium">{refund.order.orderNumber}</p>
+                      <p className="text-xs text-charcoal-light">{refund.email}</p>
+                    </div>
+                    <select
+                      value={refund.status}
+                      onChange={(e) => updateRefundStatus(refund.id, e.target.value)}
+                      className="text-xs border border-cream-dark bg-warm-white px-2 py-1.5"
+                    >
+                      <option value="PENDING">En attente</option>
+                      <option value="APPROVED">Approuvé</option>
+                      <option value="REJECTED">Refusé</option>
+                      <option value="COMPLETED">Remboursé</option>
+                    </select>
+                  </div>
+                  <p className="text-sm text-charcoal-light">{refund.reason}</p>
+                  <p className="text-xs text-charcoal-light mt-2">
+                    {new Date(refund.createdAt).toLocaleDateString("fr-FR")} · {formatPrice(refund.order.total)}
+                  </p>
                 </div>
               ))
             )}

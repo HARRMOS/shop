@@ -22,18 +22,25 @@ function getTransporter() {
 
 async function sendMail(to: string, subject: string, html: string) {
   if (!isEmailConfigured()) {
-    console.log(`[Email non configuré] To: ${to} | Subject: ${subject}`);
-    return { ok: true, skipped: true };
+    console.warn(`[Email non configuré] To: ${to} | Subject: ${subject}`);
+    return { ok: false, skipped: true, error: "SMTP non configuré" };
   }
 
-  const transporter = getTransporter();
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || `"${siteName}" <${process.env.SMTP_USER}>`,
-    to,
-    subject,
-    html,
-  });
-  return { ok: true, skipped: false };
+  try {
+    const transporter = getTransporter();
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || `"${siteName}" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+    });
+    console.info(`[Email envoyé] To: ${to} | Subject: ${subject}`);
+    return { ok: true, skipped: false };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur envoi email";
+    console.error(`[Email échoué] To: ${to} | Subject: ${subject} | ${message}`);
+    return { ok: false, skipped: false, error: message };
+  }
 }
 
 interface OrderEmailData {
@@ -81,7 +88,11 @@ export async function sendOrderConfirmationToCustomer(order: OrderEmailData) {
       <strong>Total : ${formatPrice(order.total)}</strong></p>
       <p><strong>Livraison :</strong><br>${order.address}, ${order.postalCode} ${order.city}, ${order.country}</p>
       <p>Paiement à la livraison ou par virement. Nous vous contacterons sous 24h.</p>
-      <p><a href="${siteUrl}/commande/suivi?numero=${order.orderNumber}&email=${encodeURIComponent(order.email)}">Suivre ma commande</a></p>
+      <p>
+        <a href="${siteUrl}/compte">Accéder à mon espace client</a>
+        ·
+        <a href="${siteUrl}/commande/suivi?numero=${order.orderNumber}&email=${encodeURIComponent(order.email)}">Suivre ma commande</a>
+      </p>
     </div>`;
   return sendMail(order.email, `Confirmation commande ${order.orderNumber} — ${siteName}`, html);
 }
@@ -141,4 +152,73 @@ export async function sendOrderStatusUpdate(order: OrderEmailData & { status: st
       <p><a href="${siteUrl}/commande/suivi?numero=${order.orderNumber}&email=${encodeURIComponent(order.email)}">Voir ma commande</a></p>
     </div>`;
   return sendMail(order.email, `Mise à jour commande ${order.orderNumber}`, html);
+}
+
+export async function sendCustomerLoginLink(email: string, token: string) {
+  const link = `${siteUrl}/api/compte/verify?token=${token}`;
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#2c2c2c">
+      <h1 style="color:#7d8b6f">${siteName}</h1>
+      <p>Bonjour,</p>
+      <p>Cliquez sur le lien ci-dessous pour accéder à votre espace client (commandes, adresse, remboursements).</p>
+      <p><a href="${link}" style="display:inline-block;background:#2c2c2c;color:#fff;padding:12px 24px;text-decoration:none">Accéder à mon compte</a></p>
+      <p style="font-size:12px;color:#666">Ce lien expire dans 30 minutes. Si vous n'avez pas demandé cette connexion, ignorez cet email.</p>
+    </div>`;
+  return sendMail(email, `Connexion à votre espace — ${siteName}`, html);
+}
+
+export async function sendRefundRequestToCustomer(data: {
+  email: string;
+  firstName: string;
+  orderNumber: string;
+}) {
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px">
+      <h2 style="color:#7d8b6f">${siteName}</h2>
+      <p>Bonjour ${data.firstName},</p>
+      <p>Nous avons bien reçu votre demande de remboursement pour la commande <strong>${data.orderNumber}</strong>.</p>
+      <p>Notre équipe la traite sous 48–72h ouvrées. Vous recevrez un email dès qu'elle sera mise à jour.</p>
+      <p><a href="${siteUrl}/compte">Voir mon espace client</a></p>
+    </div>`;
+  return sendMail(data.email, `Demande de remboursement reçue — ${data.orderNumber}`, html);
+}
+
+export async function sendRefundNotificationToShop(data: {
+  orderNumber: string;
+  email: string;
+  reason: string;
+}) {
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px">
+      <h2>Demande de remboursement</h2>
+      <p>Commande : <strong>${data.orderNumber}</strong></p>
+      <p>Client : ${data.email}</p>
+      <p>Motif : ${data.reason.replace(/\n/g, "<br>")}</p>
+      <p><a href="${siteUrl}/admin">Gérer dans l'admin</a></p>
+    </div>`;
+  return sendMail(shopEmail, `[Remboursement] ${data.orderNumber}`, html);
+}
+
+export async function sendRefundStatusUpdate(data: {
+  email: string;
+  firstName: string;
+  orderNumber: string;
+  status: string;
+  adminNote?: string | null;
+}) {
+  const labels: Record<string, string> = {
+    PENDING: "En attente",
+    APPROVED: "Approuvée",
+    REJECTED: "Refusée",
+    COMPLETED: "Remboursée",
+  };
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px">
+      <h2 style="color:#7d8b6f">${siteName}</h2>
+      <p>Bonjour ${data.firstName},</p>
+      <p>Votre demande de remboursement pour la commande <strong>${data.orderNumber}</strong> est maintenant : <strong>${labels[data.status] || data.status}</strong>.</p>
+      ${data.adminNote ? `<p>Message : ${data.adminNote}</p>` : ""}
+      <p><a href="${siteUrl}/compte">Voir mon espace client</a></p>
+    </div>`;
+  return sendMail(data.email, `Remboursement ${data.orderNumber} — ${labels[data.status] || data.status}`, html);
 }

@@ -8,6 +8,7 @@ const footerLinks = {
     { href: "/boutique", label: "Tous les produits" },
   ],
   infos: [
+    { href: "/compte", label: "Mon compte" },
     { href: "/a-propos", label: "À propos" },
     { href: "/livraison", label: "Livraison & retours" },
     { href: "/commande/suivi", label: "Suivi commande" },

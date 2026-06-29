@@ -89,7 +89,7 @@ export default function CheckoutPage() {
           <CheckCircle size={56} className="mx-auto text-sage mb-6" />
           <h1 className="font-display text-3xl text-charcoal mb-4">Commande confirmée !</h1>
           <p className="text-charcoal-light mb-2">
-            Merci pour votre commande. Vous recevrez un email de confirmation sous peu.
+            Merci pour votre commande. Un email de confirmation vous a été envoyé.
           </p>
           <p className="text-sm font-medium text-charcoal mb-4">
             N° de commande : {orderNumber}
@@ -104,6 +104,12 @@ export default function CheckoutPage() {
           {!isDemoOrder && <div className="mb-8" />}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
+              href="/compte"
+              className="inline-flex items-center justify-center gap-2 bg-charcoal text-warm-white px-8 py-4 text-sm uppercase tracking-widest hover:bg-charcoal-light transition-colors"
+            >
+              Mon espace client
+            </Link>
+            <Link
               href={`/commande/suivi?numero=${orderNumber}&email=${encodeURIComponent(orderEmail)}`}
               className="inline-flex items-center justify-center gap-2 border border-charcoal text-charcoal px-8 py-4 text-sm uppercase tracking-widest hover:bg-cream transition-colors"
             >
@@ -111,7 +117,7 @@ export default function CheckoutPage() {
             </Link>
             <Link
               href="/boutique"
-              className="inline-flex items-center justify-center gap-2 bg-charcoal text-warm-white px-8 py-4 text-sm uppercase tracking-widest hover:bg-charcoal-light transition-colors"
+              className="inline-flex items-center justify-center gap-2 border border-cream-dark text-charcoal px-8 py-4 text-sm uppercase tracking-widest hover:bg-cream transition-colors"
             >
               Continuer mes achats
             </Link>
