@@ -52,6 +52,18 @@ services:
     profiles:
       - seed
 
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.seed
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-noor}:${POSTGRES_PASSWORD}@${POSTGRES_CONTAINER:-noor-postgres}:5432/${POSTGRES_DB:-noor_shop}?schema=public
+    networks:
+      - postgres
+    profiles:
+      - migrate
+    command: ["sh", "-c", "npx prisma db push"]
+
 networks:
   traefik:
     external: true
